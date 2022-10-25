@@ -44,14 +44,10 @@ public class BrcrisApplication {
 	}
 
 	static void init() throws ElasticsearchException, IOException {
-		// Create the low-level client
-		RestClient restClient = RestClient.builder(new HttpHost("172.16.16.90", 9200)).build();
 
-		// Create the transport with a Jackson mapper
+		RestClient restClient = RestClient.builder(new HttpHost("172.16.16.90", 9200)).build();
 		ElasticsearchTransport transport =
 				new RestClientTransport(restClient, new JacksonJsonpMapper());
-
-		// And create the API client
 		ElasticsearchClient client = new ElasticsearchClient(transport);
 
 
