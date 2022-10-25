@@ -2,9 +2,20 @@ package br.ibict.brcris.model;
 
 import java.util.List;
 
-public class Orgunit {
+public class PqSeniorPersResp {
+    List<Institution> orgunit;
     List<String> name;
     String id;
+
+    public PqSeniorPersResp() {}
+
+    public List<Institution> getOrgunit() {
+        return orgunit;
+    }
+
+    public void setOrgunits(List<Institution> orgunit) {
+        this.orgunit = orgunit;
+    }
 
     public List<String> getName() {
         return name;

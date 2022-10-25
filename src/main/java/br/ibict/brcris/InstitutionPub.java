@@ -11,7 +11,7 @@ public class InstitutionPub {
 
     @Override
     public boolean equals(Object outher) {
-        return this.id.equals(((Institution) outher).getId());
+        return this.id.equals(((InstitutionPub) outher).getId());
     }
 
 

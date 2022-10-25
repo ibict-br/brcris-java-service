@@ -2,7 +2,7 @@ package br.ibict.brcris.model;
 
 import java.util.List;
 
-public class PubsAuthors {
+public class Author {
     List<String> name;
     String id;
 

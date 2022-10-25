@@ -10,11 +10,12 @@ import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import br.ibict.brcris.model.Pqseniorpers;
-import br.ibict.brcris.model.Pqseniorspubs;
-import br.ibict.brcris.model.PubsAuthors;
+import br.ibict.brcris.model.Author;
+import br.ibict.brcris.model.PqSeniorPersResp;
+import br.ibict.brcris.model.PqSeniorsPubsResp;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
@@ -51,95 +52,80 @@ public class BrcrisApplication {
 		// And create the API client
 		ElasticsearchClient client = new ElasticsearchClient(transport);
 
-		Set<Institution> institutions = new HashSet<>();
-		Set<Pubs> pubsSave = new HashSet<>();
 
-		List<Pqseniorpers> pqseniorpers = new ArrayList<>();
+		List<Hit<PqSeniorPersResp>> authorsById = getAuthorsById(client,
+				Arrays.asList("34fcd70b-4c06-417e-a207-374ad5d11a5a",
+						"8a0de9da-6f1d-4fac-99da-0b4133d2b07a",
+						"ff0c9859-a1c5-4df4-9737-68d871f08cf1"));
 
-		System.out.println("consulta autores");
-		for (int contador = 0; contador < 14353; contador += QTD) {
+		System.out.println(authorsById.size());
 
-			List<Hit<Pqseniorpers>> auts = getAuthors(client, contador);
-			if (auts != null) {
+		for (Hit<PqSeniorPersResp> hit : authorsById) {
 
-				for (Hit<Pqseniorpers> hit : auts) {
-					pqseniorpers.add(hit.source());
-					// Pqseniorpers pq = hit.source();
-					// Author author = new Author(pq.getId(), pq.getName().get(0));
-					// Institution institution = institutions.stream()
-					// .filter(i -> i.getId().equals(pq.getOrgunit().get(0).getId()))
-					// .findFirst().orElse(null);
-					// if (institution != null) {
-					// institution.addAuthor(author);
-					// } else {
-					// Institution inst = new Institution(pq.getOrgunit().get(0).getId(),
-					// pq.getOrgunit().get(0).getName().get(0));
-					// inst.addAuthor(author);
-					// institutions.add(inst);
-					// }
-				}
-			} else {
-				break;
-			}
+			PqSeniorPersResp pq = hit.source();
+			System.out.println(pq.getName().get(0));
+
 		}
+		// Set<Publication> pubsSave = new HashSet<>();
 
-		System.out.println("consulta pubs");
-		for (int contador = 0; contador < 40773; contador += QTD) {
+		// List<PqSeniorPersResp> pqseniorpers = new ArrayList<>();
 
-			List<Hit<Pqseniorspubs>> pubs = getPubs(client, contador);
-			if (pubs != null) {
-				for (Hit<Pqseniorspubs> hit : pubs) {
-					Pqseniorspubs pq = hit.source();
-					Pubs pub = new Pubs(pq.getId());
-					for (PubsAuthors pubsAuthors : pq.getAuthor()) {
+		// System.out.println("consulta autores");
+		// for (int contador = 0; contador < 14353; contador += QTD) {
 
-						Pqseniorpers orElse = pqseniorpers.stream()
-								.filter(p -> p.getId().equals(pubsAuthors.getId())).findFirst()
-								.orElse(null);
-						if (orElse != null) {
-							InstitutionPub iPub =
-									new InstitutionPub(orElse.getOrgunit().get(0).getId(),
-											orElse.getOrgunit().get(0).getName().get(0));
-							pub.addInstitution(iPub);
-
-						}
-						// for (Institution inst : institutions) {
-						// Author authorFound = inst.getAuthors().stream()
-						// .filter(a -> a.getId().equals(pubsAuthors.getId())).findFirst()
-						// .orElse(null);
-						// if (authorFound != null) {
-						// authorFound.addPub(pq.getId());
-						// }
-						// }
-
-					}
-					pubsSave.add(pub);
-				}
-
-			} else {
-				break;
-			}
-		}
-		// for (Institution institution : institutions) {
-		// System.out.println(institution.getName());
-		// for (Author author : institution.getAuthors()) {
-		// System.out.println(author.getName() + ": " + author.getPubs());
+		// List<Hit<PqSeniorPersResp>> resp = getAuthors(client, contador);
+		// if (resp != null) {
+		// for (Hit<PqSeniorPersResp> hit : resp) {
+		// pqseniorpers.add(hit.source());
 		// }
-		// System.out.println("######");
+		// } else {
+		// break;
+		// }
 		// }
 
-		System.out.println("inserindo");
-		insertPub(client, pubsSave);
-		System.out.println("fim");
+		// System.out.println("consulta pubs");
+		// for (int contador = 0; contador < 40773; contador += QTD) {
+
+		// List<Hit<PqSeniorsPubsResp>> resp = getPubs(client, contador);
+		// if (resp != null) {
+		// for (Hit<PqSeniorsPubsResp> hit : resp) {
+		// PqSeniorsPubsResp pq = hit.source();
+		// Publication pub = new Publication(pq.getId());
+		// for (Author author : pq.getAuthor()) {
+
+		// PqSeniorPersResp orElse =
+		// pqseniorpers.stream().filter(p -> p.getId().equals(author.getId()))
+		// .findFirst().orElse(null);
+		// if (orElse != null) {
+		// InstitutionPub iPub =
+		// new InstitutionPub(orElse.getOrgunit().get(0).getId(),
+		// orElse.getOrgunit().get(0).getName().get(0));
+		// pub.addInstitution(iPub);
+
+		// }
+
+		// }
+		// pubsSave.add(pub);
+		// }
+
+		// } else {
+		// break;
+		// }
+		// }
+
+		// System.out.println("inserindo");
+		// insertPub(client, pubsSave);
+		// System.out.println("fim");
 
 
 
 	}
 
-	private static void insertPub(ElasticsearchClient client, Set<Pubs> pubs) throws IOException {
+	private static void insertPub(ElasticsearchClient client, Set<Publication> pubs)
+			throws IOException {
 		BulkRequest.Builder br = new BulkRequest.Builder();
 
-		for (Pubs pub : pubs) {
+		for (Publication pub : pubs) {
 			br.operations(op -> op
 					.index(idx -> idx.index("pubs-test-jesiel").id(pub.getId()).document(pub)));
 		}
@@ -157,64 +143,65 @@ public class BrcrisApplication {
 		}
 	}
 
-	private static void insert(ElasticsearchClient client, Set<Institution> institutions)
-			throws IOException {
-		BulkRequest.Builder br = new BulkRequest.Builder();
-
-		for (Institution institution : institutions) {
-			br.operations(op -> op.index(idx -> idx.index("institutions-test-jesiel")
-					.id(institution.getId()).document(institution)));
-		}
-
-		BulkResponse result = client.bulk(br.build());
-
-		// Log errors, if any
-		if (result.errors()) {
-			System.out.println("Bulk had errors");
-			for (BulkResponseItem item : result.items()) {
-				if (item.error() != null) {
-					System.out.println(item.error().reason());
-				}
-			}
-		}
-	}
 
 
-	private static List<Hit<Pqseniorspubs>> getPubs(ElasticsearchClient client, int contador) {
+	private static List<Hit<PqSeniorsPubsResp>> getPubs(ElasticsearchClient client, int contador) {
 		try {
 			System.out.println("Busca de " + contador + "até " + (contador + QTD));
-			SearchResponse<Pqseniorspubs> search =
+			SearchResponse<PqSeniorsPubsResp> search =
 					client.search(
 							s -> s.index("pqseniors-pubs").from(contador).size(contador + QTD)
 									.source(so -> so.filter(fil -> fil.includes(
 											Arrays.asList("author.name", "author.id", "id"))))
 									.query(q -> q.constantScore(
 											c -> c.filter(f -> f.exists(e -> e.field("author"))))),
-							Pqseniorspubs.class);
+							PqSeniorsPubsResp.class);
 
 			return search.hits().hits();
 		} catch (Exception e) {
-			// TODO: handle exception
 			e.printStackTrace();
 			return null;
 		}
 	}
 
-	private static List<Hit<Pqseniorpers>> getAuthors(ElasticsearchClient client, int contador) {
+	private static List<Hit<PqSeniorPersResp>> getAuthorsById(ElasticsearchClient client,
+			List<String> ids) {
+		try {
+			List<FieldValue> fieldValues = new ArrayList<>();
+			for (String id : ids) {
+				fieldValues.add(FieldValue.of(id));
+			}
+			SearchResponse<PqSeniorPersResp> search =
+					client.search(
+							s -> s.index("pqsenior-pers")
+									.source(so -> so.filter(fil -> fil.includes(Arrays
+											.asList("orgunit.name", "name", "id", "orgunit.id"))))
+									.query(q -> q.terms(t -> t.field("id.keyword")
+											.terms(termos -> termos.value(fieldValues)))),
+							PqSeniorPersResp.class);
+
+			return search.hits().hits();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	private static List<Hit<PqSeniorPersResp>> getAuthors(ElasticsearchClient client,
+			int contador) {
 		try {
 			System.out.println("Busca de " + contador + "até " + (contador + QTD));
-			SearchResponse<Pqseniorpers> search =
+			SearchResponse<PqSeniorPersResp> search =
 					client.search(
 							s -> s.index("pqsenior-pers").from(contador).size(contador + QTD)
 									.source(so -> so.filter(fil -> fil.includes(Arrays
 											.asList("orgunit.name", "name", "id", "orgunit.id"))))
 									.query(q -> q.constantScore(c -> c
 											.filter(f -> f.exists(e -> e.field("orgunit.name"))))),
-							Pqseniorpers.class);
+							PqSeniorPersResp.class);
 
 			return search.hits().hits();
 		} catch (Exception e) {
-			// TODO: handle exception
 			e.printStackTrace();
 			return null;
 		}

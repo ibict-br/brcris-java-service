@@ -2,9 +2,9 @@ package br.ibict.brcris.model;
 
 import java.util.List;
 
-public class Pqseniorspubs {
+public class PqSeniorsPubsResp {
     String id;
-    List<PubsAuthors> author;
+    List<Author> author;
 
 
     public String getId() {
@@ -15,11 +15,11 @@ public class Pqseniorspubs {
         this.id = id;
     }
 
-    public List<PubsAuthors> getAuthor() {
+    public List<Author> getAuthor() {
         return author;
     }
 
-    public void setAuthor(List<PubsAuthors> author) {
+    public void setAuthor(List<Author> author) {
         this.author = author;
     }
 

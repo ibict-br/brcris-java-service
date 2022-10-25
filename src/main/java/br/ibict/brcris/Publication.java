@@ -3,12 +3,12 @@ package br.ibict.brcris;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Pubs {
+public class Publication {
     String id;
     List<InstitutionPub> institutions = new ArrayList<>();
 
 
-    public Pubs(String id) {
+    public Publication(String id) {
         this.id = id;
     }
 
