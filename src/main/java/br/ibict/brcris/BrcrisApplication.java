@@ -53,70 +53,73 @@ public class BrcrisApplication {
 		ElasticsearchClient client = new ElasticsearchClient(transport);
 
 
-		List<Hit<PqSeniorPersResp>> authorsById = getAuthorsById(client,
-				Arrays.asList("34fcd70b-4c06-417e-a207-374ad5d11a5a",
-						"8a0de9da-6f1d-4fac-99da-0b4133d2b07a",
-						"ff0c9859-a1c5-4df4-9737-68d871f08cf1"));
+		// List<Hit<PqSeniorPersResp>> authorsById = getAuthorsById(client,
+		// Arrays.asList("34fcd70b-4c06-417e-a207-374ad5d11a5a",
+		// "8a0de9da-6f1d-4fac-99da-0b4133d2b07a",
+		// "ff0c9859-a1c5-4df4-9737-68d871f08cf1"));
 
-		System.out.println(authorsById.size());
+		// System.out.println(authorsById.size());
 
-		for (Hit<PqSeniorPersResp> hit : authorsById) {
+		// for (Hit<PqSeniorPersResp> hit : authorsById) {
 
-			PqSeniorPersResp pq = hit.source();
-			System.out.println(pq.getName().get(0));
+		// PqSeniorPersResp pq = hit.source();
+		// System.out.println(pq.getName().get(0));
+
+		// }
+
+
+		List<PqSeniorPersResp> pqseniorpers = new ArrayList<>();
+
+		System.out.println("consulta autores");
+		for (int contador = 0; contador < 14353; contador += QTD) {
+
+			List<Hit<PqSeniorPersResp>> resp = getAuthors(client, contador);
+			if (resp != null) {
+				for (Hit<PqSeniorPersResp> hit : resp) {
+					pqseniorpers.add(hit.source());
+				}
+			} else {
+				break;
+			}
+		}
+
+		System.out.println("consulta pubs");
+		for (int contador = 0; contador < 40773; contador += QTD) {
+
+			Set<Publication> publications = new HashSet<>();
+
+			List<Hit<PqSeniorsPubsResp>> resp = getPubs(client, contador);
+			if (resp != null) {
+				for (Hit<PqSeniorsPubsResp> hit : resp) {
+					PqSeniorsPubsResp pq = hit.source();
+					Publication pub = new Publication(pq.getId());
+					for (Author author : pq.getAuthor()) {
+
+						PqSeniorPersResp orElse =
+								pqseniorpers.stream().filter(p -> p.getId().equals(author.getId()))
+										.findFirst().orElse(null);
+						if (orElse != null) {
+							Institution institution =
+									new Institution(orElse.getOrgunit().get(0).getId(),
+											orElse.getOrgunit().get(0).getName().get(0));
+							pub.addInstitution(institution);
+
+						}
+
+					}
+					publications.add(pub);
+				}
+
+			} else {
+				break;
+			}
+			if (publications.size() > 0) {
+				System.out.println("inserindo");
+				insertPub(client, publications);
+				System.out.println("foiii");
+			}
 
 		}
-		// Set<Publication> pubsSave = new HashSet<>();
-
-		// List<PqSeniorPersResp> pqseniorpers = new ArrayList<>();
-
-		// System.out.println("consulta autores");
-		// for (int contador = 0; contador < 14353; contador += QTD) {
-
-		// List<Hit<PqSeniorPersResp>> resp = getAuthors(client, contador);
-		// if (resp != null) {
-		// for (Hit<PqSeniorPersResp> hit : resp) {
-		// pqseniorpers.add(hit.source());
-		// }
-		// } else {
-		// break;
-		// }
-		// }
-
-		// System.out.println("consulta pubs");
-		// for (int contador = 0; contador < 40773; contador += QTD) {
-
-		// List<Hit<PqSeniorsPubsResp>> resp = getPubs(client, contador);
-		// if (resp != null) {
-		// for (Hit<PqSeniorsPubsResp> hit : resp) {
-		// PqSeniorsPubsResp pq = hit.source();
-		// Publication pub = new Publication(pq.getId());
-		// for (Author author : pq.getAuthor()) {
-
-		// PqSeniorPersResp orElse =
-		// pqseniorpers.stream().filter(p -> p.getId().equals(author.getId()))
-		// .findFirst().orElse(null);
-		// if (orElse != null) {
-		// InstitutionPub iPub =
-		// new InstitutionPub(orElse.getOrgunit().get(0).getId(),
-		// orElse.getOrgunit().get(0).getName().get(0));
-		// pub.addInstitution(iPub);
-
-		// }
-
-		// }
-		// pubsSave.add(pub);
-		// }
-
-		// } else {
-		// break;
-		// }
-		// }
-
-		// System.out.println("inserindo");
-		// insertPub(client, pubsSave);
-		// System.out.println("fim");
-
 
 
 	}
@@ -147,7 +150,7 @@ public class BrcrisApplication {
 
 	private static List<Hit<PqSeniorsPubsResp>> getPubs(ElasticsearchClient client, int contador) {
 		try {
-			System.out.println("Busca de " + contador + "até " + (contador + QTD));
+			// System.out.println("Busca de " + contador + "até " + (contador + QTD));
 			SearchResponse<PqSeniorsPubsResp> search =
 					client.search(
 							s -> s.index("pqseniors-pubs").from(contador).size(contador + QTD)
@@ -190,7 +193,7 @@ public class BrcrisApplication {
 	private static List<Hit<PqSeniorPersResp>> getAuthors(ElasticsearchClient client,
 			int contador) {
 		try {
-			System.out.println("Busca de " + contador + "até " + (contador + QTD));
+			// System.out.println("Busca de " + contador + "até " + (contador + QTD));
 			SearchResponse<PqSeniorPersResp> search =
 					client.search(
 							s -> s.index("pqsenior-pers").from(contador).size(contador + QTD)

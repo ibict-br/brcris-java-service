@@ -1,19 +1,20 @@
 package br.ibict.brcris.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PqSeniorPersResp {
-    List<Institution> orgunit;
+    List<Organization> orgunit = new ArrayList<>();
     List<String> name;
     String id;
 
     public PqSeniorPersResp() {}
 
-    public List<Institution> getOrgunit() {
+    public List<Organization> getOrgunit() {
         return orgunit;
     }
 
-    public void setOrgunits(List<Institution> orgunit) {
+    public void setOrgunits(List<Organization> orgunit) {
         this.orgunit = orgunit;
     }
 
@@ -32,6 +33,12 @@ public class PqSeniorPersResp {
     public void setId(String id) {
         this.id = id;
     }
+
+    @Override
+    public String toString() {
+        return "PqSeniorPersResp [orgunit=" + orgunit + ", name=" + name + ", id=" + id + "]";
+    }
+
 
 
 }

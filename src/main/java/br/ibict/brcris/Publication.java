@@ -5,14 +5,14 @@ import java.util.List;
 
 public class Publication {
     String id;
-    List<InstitutionPub> institutions = new ArrayList<>();
+    List<Institution> institutions = new ArrayList<>();
 
 
     public Publication(String id) {
         this.id = id;
     }
 
-    public void addInstitution(InstitutionPub institutionPub) {
+    public void addInstitution(Institution institutionPub) {
         this.institutions.add(institutionPub);
     }
 
@@ -27,12 +27,12 @@ public class Publication {
     }
 
 
-    public List<InstitutionPub> getInstitutions() {
+    public List<Institution> getInstitutions() {
         return institutions;
     }
 
 
-    public void setInstitutions(List<InstitutionPub> institutions) {
+    public void setInstitutions(List<Institution> institutions) {
         this.institutions = institutions;
     }
 

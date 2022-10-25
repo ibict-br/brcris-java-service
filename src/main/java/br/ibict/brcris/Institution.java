@@ -1,17 +1,17 @@
 package br.ibict.brcris;
 
-public class InstitutionPub {
+public class Institution {
     String id;
     String name;
 
-    public InstitutionPub(String id, String name) {
+    public Institution(String id, String name) {
         this.id = id;
         this.name = name;
     }
 
     @Override
     public boolean equals(Object outher) {
-        return this.id.equals(((InstitutionPub) outher).getId());
+        return this.id.equals(((Institution) outher).getId());
     }
 
 

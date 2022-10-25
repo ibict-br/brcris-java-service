@@ -2,7 +2,7 @@ package br.ibict.brcris.model;
 
 import java.util.List;
 
-public class Institution {
+public class Organization {
     List<String> name;
     String id;
 
@@ -22,5 +22,11 @@ public class Institution {
         this.id = id;
     }
 
+    @Override
+    public String toString() {
+        return "Organization [name=" + name + ", id=" + id + "]";
+    }
 
+
+    
 }
