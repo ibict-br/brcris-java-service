@@ -1,4 +1,4 @@
-package br.ibict.brcris;
+package br.ibict.brcris.dto;
 
 public class Institution {
     String id;

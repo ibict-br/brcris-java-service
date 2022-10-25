@@ -1,4 +1,4 @@
-package br.ibict.brcris.model;
+package br.ibict.brcris.response;
 
 import java.util.ArrayList;
 import java.util.List;

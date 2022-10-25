@@ -1,4 +1,4 @@
-package br.ibict.brcris;
+package br.ibict.brcris.dto;
 
 import java.util.ArrayList;
 import java.util.List;
