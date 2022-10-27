@@ -23,6 +23,7 @@ import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
 import co.elastic.clients.elasticsearch.core.search.Hit;
+import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
@@ -30,7 +31,8 @@ import co.elastic.clients.transport.rest_client.RestClientTransport;
 @SpringBootApplication
 public class BrcrisApplication {
 
-	private static final int QTD = 100;
+	private static final int QTD_ITEMS_BY_SEARCH = 100;
+	private static int from = 0;
 
 	public static void main(String[] args) {
 		SpringApplication.run(BrcrisApplication.class, args);
@@ -51,75 +53,73 @@ public class BrcrisApplication {
 		ElasticsearchClient client = new ElasticsearchClient(transport);
 
 
-		// List<Hit<PqSeniorPersResp>> authorsById = getAuthorsById(client,
-		// Arrays.asList("34fcd70b-4c06-417e-a207-374ad5d11a5a",
-		// "8a0de9da-6f1d-4fac-99da-0b4133d2b07a",
-		// "ff0c9859-a1c5-4df4-9737-68d871f08cf1"));
 
-		// System.out.println(authorsById.size());
+		List<PqSeniorPersResp> pqseniorpers = getAuthors(client);
 
-		// for (Hit<PqSeniorPersResp> hit : authorsById) {
-
-		// PqSeniorPersResp pq = hit.source();
-		// System.out.println(pq.getName().get(0));
-
-		// }
+		getPubs(client, pqseniorpers);
 
 
-		List<PqSeniorPersResp> pqseniorpers = new ArrayList<>();
+	}
 
-		System.out.println("consulta autores");
-		for (int contador = 0; contador < 14353; contador += QTD) {
-
-			List<Hit<PqSeniorPersResp>> resp = getAuthors(client, contador);
-			if (resp != null) {
-				for (Hit<PqSeniorPersResp> hit : resp) {
-					pqseniorpers.add(hit.source());
-				}
-			} else {
+	private static void getPubs(ElasticsearchClient client, List<PqSeniorPersResp> pqseniorpers)
+			throws IOException {
+		System.out.println("consulta pubs");
+		long totalPubs = searchPubs(client, 0, 0).total().value();
+		from = 0;
+		while (from < totalPubs) {
+			Set<Publication> publications = new HashSet<>();
+			List<Hit<PqSeniorsPubsResp>> resp =
+					searchPubs(client, from, QTD_ITEMS_BY_SEARCH).hits();
+			if (resp == null || resp.isEmpty()) {
 				break;
 			}
-		}
+			for (Hit<PqSeniorsPubsResp> hit : resp) {
+				PqSeniorsPubsResp pq = hit.source();
+				Publication pub = new Publication(pq.getId());
+				for (Author author : pq.getAuthor()) {
 
-		System.out.println("consulta pubs");
-		for (int contador = 0; contador < 40773; contador += QTD) {
-
-			Set<Publication> publications = new HashSet<>();
-
-			List<Hit<PqSeniorsPubsResp>> resp = getPubs(client, contador);
-			if (resp != null) {
-				for (Hit<PqSeniorsPubsResp> hit : resp) {
-					PqSeniorsPubsResp pq = hit.source();
-					Publication pub = new Publication(pq.getId());
-					for (Author author : pq.getAuthor()) {
-
-						PqSeniorPersResp orElse =
-								pqseniorpers.stream().filter(p -> p.getId().equals(author.getId()))
-										.findFirst().orElse(null);
-						if (orElse != null) {
-							Institution institution =
-									new Institution(orElse.getOrgunit().get(0).getId(),
-											orElse.getOrgunit().get(0).getName().get(0));
-							pub.addInstitution(institution);
-
-						}
+					PqSeniorPersResp orElse = pqseniorpers.stream()
+							.filter(p -> p.getId().equals(author.getId())).findFirst().orElse(null);
+					if (orElse != null) {
+						Institution institution =
+								new Institution(orElse.getOrgunit().get(0).getId(),
+										orElse.getOrgunit().get(0).getName().get(0));
+						pub.addInstitution(institution);
 
 					}
-					publications.add(pub);
-				}
 
-			} else {
-				break;
+				}
+				publications.add(pub);
 			}
+
 			if (publications.size() > 0) {
 				System.out.println("inserindo");
 				insertPub(client, publications);
 				System.out.println("foiii");
 			}
-
+			from += QTD_ITEMS_BY_SEARCH;
 		}
+	}
 
+	private static List<PqSeniorPersResp> getAuthors(ElasticsearchClient client) {
+		List<PqSeniorPersResp> pqseniorpers = new ArrayList<>();
+		System.out.println("consulta autores");
+		long totalAuthors = searchAuthors(client, 0, 0).total().value();
+		int from = 0;
+		while (from < totalAuthors) {
+			List<Hit<PqSeniorPersResp>> resp =
+					searchAuthors(client, from, QTD_ITEMS_BY_SEARCH).hits();
 
+			if (resp == null || resp.isEmpty()) {
+				break;
+			}
+			for (Hit<PqSeniorPersResp> hit : resp) {
+				pqseniorpers.add(hit.source());
+			}
+			from += QTD_ITEMS_BY_SEARCH;
+		}
+		System.out.println("pqseniorpers size: " + pqseniorpers.size());
+		return pqseniorpers;
 	}
 
 	private static void insertPub(ElasticsearchClient client, Set<Publication> pubs)
@@ -146,19 +146,20 @@ public class BrcrisApplication {
 
 
 
-	private static List<Hit<PqSeniorsPubsResp>> getPubs(ElasticsearchClient client, int contador) {
+	private static HitsMetadata<PqSeniorsPubsResp> searchPubs(ElasticsearchClient client, int from,
+			int size) {
 		try {
-			// System.out.println("Busca de " + contador + "até " + (contador + QTD));
+			System.out.println("Busca " + QTD_ITEMS_BY_SEARCH + " a partir de " + from);
 			SearchResponse<PqSeniorsPubsResp> search =
 					client.search(
-							s -> s.index("pqseniors-pubs").from(contador).size(contador + QTD)
+							s -> s.index("pqseniors-pubs").from(from).size(size)
 									.source(so -> so.filter(fil -> fil.includes(
 											Arrays.asList("author.name", "author.id", "id"))))
 									.query(q -> q.constantScore(
 											c -> c.filter(f -> f.exists(e -> e.field("author"))))),
 							PqSeniorsPubsResp.class);
 
-			return search.hits().hits();
+			return search.hits();
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -188,20 +189,20 @@ public class BrcrisApplication {
 		}
 	}
 
-	private static List<Hit<PqSeniorPersResp>> getAuthors(ElasticsearchClient client,
-			int contador) {
+	private static HitsMetadata<PqSeniorPersResp> searchAuthors(ElasticsearchClient client,
+			int from, int size) {
 		try {
-			// System.out.println("Busca de " + contador + "até " + (contador + QTD));
+			System.out.println("Busca " + QTD_ITEMS_BY_SEARCH + " a partir de " + from);
 			SearchResponse<PqSeniorPersResp> search =
 					client.search(
-							s -> s.index("pqsenior-pers").from(contador).size(contador + QTD)
+							s -> s.index("pqsenior-pers").from(from).size(size)
 									.source(so -> so.filter(fil -> fil.includes(Arrays
 											.asList("orgunit.name", "name", "id", "orgunit.id"))))
 									.query(q -> q.constantScore(c -> c
 											.filter(f -> f.exists(e -> e.field("orgunit.name"))))),
 							PqSeniorPersResp.class);
 
-			return search.hits().hits();
+			return search.hits();
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
