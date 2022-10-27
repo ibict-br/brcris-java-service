@@ -10,8 +10,28 @@ public class Institution {
     }
 
     @Override
-    public boolean equals(Object outher) {
-        return this.id.equals(((Institution) outher).getId());
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Institution other = (Institution) obj;
+        if (id == null) {
+            if (other.id != null)
+                return false;
+        } else if (!id.equals(other.id))
+            return false;
+        return true;
     }
 
 
@@ -29,6 +49,11 @@ public class Institution {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "Institution [id=" + id + ", name=" + name + "]";
     }
 
 
